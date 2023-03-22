@@ -18,8 +18,16 @@ def insert(sample,p, char_type,spread):
   return ''.join(sample)
 
 def gen_noise(sample,p,char_type,spread): #<-- frequency probability 
+  """
+  DECIDE what to insert to one of specific case (TOTAL 12 variations)
+  --list of WHAT to insert: homogenous vs mixed
+  --calculate HOW MANY to insert (frequency function of length): 0.1%, 1%, 10%
+  --decide HOW to insert (together or spread)
+  """
   length = len(sample)
   noise_ls = random.choices(char_type, k=int(p*length))
+  if not spread:
+    return [''.join(noise_ls)] #<--- Noise all bunched up
   random.shuffle(noise_ls)
   return noise_ls
 
