@@ -1,4 +1,7 @@
 import random
+import click as ck
+
+
 
 #initialize LIST of useless characters + char <--- GLOBAL
 char_useless = list('BJOUXZ')
@@ -30,15 +33,22 @@ def gen_noise(sample,p,char_type,spread): #<-- frequency probability
   
 #--------------------------------
 # CHANGE THE OPTIONS HERE
-p=0.01
-char_type= char_main
-spread=True
+# p=0.01
+# char_type= char_main
+# spread=True
+@ck.command()
+@ck.option('--perturbation', '-p', default=0.01, required=True, help='Perturbation in % to be applied')
+@ck.option('--char-type', '-c', default="useless", help='Characters to use when perturbing data (useless or main)')
+@ck.option('--spread', '-s', is_flag=True, help='Perturbation in % to be applied')
+def main(perturbation, char_type, spread):
+  with open("./data/test_data.fa",'r') as f:
+      database = f.readlines()
 
-with open(".\\data\\train_data.fa",'r') as f:
-    database = f.readlines()
+  f_out = open(f"./perturb/test_data_perturb_{str(perturbation)+char_type[0]+str(spread)}.fa",'w') #<------- Need to specify type of perturb
+  for i in range(0,len(database),2):
+    f_out.write(database[i])
+    f_out.write(insert(database[i+1],perturbation,char_type,spread))  #<--- Fix: what if pass extra val to insert
+  f_out.close()
 
-f_out = open(f".\\perturb\\test_data_perturb_{str(p)+char_type[0]+str(spread)}.fa",'w') #<------- Need to specify type of perturb
-for i in range(0,len(database),2):
-  f_out.write(database[i])
-  f_out.write(insert(database[i+1],p,char_type,spread))  #<--- Fix: what if pass extra val to insert
-f_out.close()
+if __name__ == '__main__':
+    main()
