@@ -9,6 +9,8 @@ def insert(sample,p, char_type,spread):
       take in noise as list"""
   noise_ls = gen_noise(sample,p,char_type,spread)
   sample = list(sample)
+  if not spread:
+    noise_ls = unspread_noise(noise_ls)
   for noise in noise_ls:
         sample.insert(random.randint(1, len(sample)),noise)  # <-- MUST shuffle ls later
   return ''.join(sample)
@@ -22,10 +24,26 @@ def gen_noise(sample,p,char_type,spread): #<-- frequency probability
   """
   length = len(sample)
   noise_ls = random.choices(char_type, k=round(p*length))
-  if not spread:
-    return [''.join(noise_ls)] #<--- Noise all bunched up
   random.shuffle(noise_ls)
   return noise_ls
+
+def unspread_noise(noise:list):
+    """
+    Receive a list of noise where every element is 1 character, 
+    flip a coin while looping through the noise to decide
+    whether to combine or not
+    Note: it's possible to have 3 characters concatenated
+    ! Only compatible with insert() for now
+    """
+    output = [noise[0]]
+    i=1
+    for i in range(1,noise):
+        if random.randint(0,1): #flip coin to decide whether or not to combine
+            output[-1] = output[-1]+noise[i]
+        else:
+            output.append(noise[i])
+            output.append('')
+    return [x for x in output if x] #remove empty string
 
 def swap(sample,p):
   """
