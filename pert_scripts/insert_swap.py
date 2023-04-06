@@ -10,7 +10,7 @@ def insert(sample, p, char_type, spread):
     take in noise as list"""
     noise_ls = gen_noise(sample, p, char_type, spread)
     sample = list(sample)
-    if not spread:
+    if not spread and len(noise_ls) >1 :
         noise_ls = unspread_noise(noise_ls, sample, p, char_type, spread)
     for noise in noise_ls:
         sample.insert(
