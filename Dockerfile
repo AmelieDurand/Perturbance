@@ -14,9 +14,6 @@ RUN pip install deepgoplus
 COPY . /deepgoplus/
 WORKDIR /deepgoplus
 RUN tar xzf ./data-1.0.6.tar.gz
-#ADD test_data2.fa /workdir/test_data2.fa
-#ADD test_data.fa /workdir/test_data.fa
-#ADD significant_digits /workdir/significant_digits
 RUN mkdir /home/results #&& mkdir /home/metrics && mkdir /home/scripts
 RUN head -n 2 ./data/test_data.fa > ./data/sample.fa
 #Set bash shell as entrypoint
