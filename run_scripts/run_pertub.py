@@ -10,9 +10,9 @@ def main():
     deepgoplus_script_path = os.path.abspath("deepgoplus/main-no-diamond.py")
     pkl_script_path = os.path.abspath("convert_tsv_pkl.py")
     eval_script_path = os.path.abspath("evaluate_deepgoplus.py")
-    pert_chance = 0.01
+    pert_chance = 0.1
     filename = subprocess.run(
-        ["python", pert_script_path, "-p", pert_chance, "-sp", "-s", "1"],
+        ["python", pert_script_path, "-p", str(pert_chance), "-sp", "-s", "1"],
         stdout=subprocess.PIPE,
     )
     print("Perturbations added")
@@ -36,6 +36,9 @@ def main():
 
     subprocess.run(["python", pkl_script_path])
     print("Converted to pickle")
+
+    if not os.path.exists("results"):
+        os.makedirs("results")
 
     result_mf = subprocess.run(
         ["python", eval_script_path, "-o", "mf", "-tsdf", "results.pkl"],
@@ -66,7 +69,9 @@ def format_result(results, filename, iteration, pert):
         writer = csv.writer(csv_writer)
         # Write the header if the file is empty
         if csv_writer.tell() == 0:
-            writer.write(["Iteration", "Smin", "Fmax", "AUPR", "Perturbation Chance"])
+            writer.writerow(
+                ["Iteration", "Smin", "Fmax", "AUPR", "Perturbation Chance"]
+            )
         line = ": ".join(metrics)
         values = line.split(": ")[1::2]
         writer.writerow([iteration, values[0], values[1], values[2], pert])
