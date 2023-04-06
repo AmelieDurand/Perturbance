@@ -16,7 +16,6 @@ def insert(sample, p, char_type, spread):
     """ Randomly select a spot to insert ONE thing by concatenating in 3 parts
         take in noise as list"""
     noise_ls = gen_noise(sample, p, char_type, spread)
-    print(noise_ls)
     sample = list(sample)
     # while bool(noise_ls):  # <--- noise_ls is random
     for noise in noise_ls:
@@ -49,11 +48,14 @@ def gen_noise(sample, p, char_type, spread):  # <-- frequency probability
 @ck.command()
 @ck.option('--perturbation', '-p', default=0.01, required=True, help='Perturbation in % to be applied')
 @ck.option('--char-type', '-c', default="useless", help='Characters to use when perturbing data (useless or main)')
-@ck.option('--spread', '-s', is_flag=True, help='Perturbation in % to be applied')
-def main(perturbation, char_type, spread):
+@ck.option('--spread', '-sp', is_flag=True, help='Perturbation in % to be applied')
+@ck.option('--seed', '-s', help='Seed for random')
+def main(perturbation, char_type, spread, seed):
     with open("./data/test_data.fa", 'r') as f:
         database = f.readlines()
     # <------- Need to specify type of perturb
+    if (seed is not None):
+        random.seed(seed)
     f_out = open(
         f"./perturb/test_data_perturb_{str(perturbation)+dna_char[char_type][0]+str(spread)}.fa", 'w')
     for i in range(0, len(database), 2):
@@ -62,6 +64,8 @@ def main(perturbation, char_type, spread):
         f_out.write(
             insert(database[i+1], perturbation, dna_char[char_type], spread))
     f_out.close()
+    print(
+        f"test_data_perturb_{str(perturbation)+dna_char[char_type][0]+str(spread)}.fa")
 
 
 if __name__ == '__main__':
