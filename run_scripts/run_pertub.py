@@ -11,6 +11,8 @@ def main():
     pkl_script_path = os.path.abspath("convert_tsv_pkl.py")
     eval_script_path = os.path.abspath("evaluate_deepgoplus.py")
     pert_chance = 0.1
+
+    # Adds perturbations
     filename = subprocess.run(
         ["python", pert_script_path, "-p", str(pert_chance), "-sp", "-s", "1"],
         stdout=subprocess.PIPE,
@@ -34,12 +36,15 @@ def main():
     )
     print("Deepgoplus evaluated")
 
+    # Converts results.tsv from the deepgoplus script into a results.pkl
     subprocess.run(["python", pkl_script_path])
     print("Converted to pickle")
 
+    # Creates a results folder if it doesn't exist
     if not os.path.exists("results"):
         os.makedirs("results")
 
+    # Evaluate results
     result_mf = subprocess.run(
         ["python", eval_script_path, "-o", "mf", "-tsdf", "results.pkl"],
         stdout=subprocess.PIPE,
@@ -63,7 +68,16 @@ def main():
     print("Evaluated CC")
 
 
-def format_result(results, filename, iteration, pert):
+def format_result(results: str, filename: str, iteration: int, pert: float):
+    """Formats the result of the evaluate_deepgoplus script into a csv
+        with Iteration, Smin, Fmax, AUPR as headers
+
+    Args:
+        results (str): Output of evaluate_deepgoplus script
+        filename (str): Name of csv file to write to
+        iteration (int): The index in which the evaluate_deepgoplus script was called in the loop
+        pert (float): Perturbation chance ranging from 0 to 1
+    """
     metrics = results.stdout.decode("utf-8").split("\n")[-4:-1]
     with open(filename, "a+", newline="") as csv_writer:
         writer = csv.writer(csv_writer)

@@ -1,12 +1,8 @@
 import random
 import click as ck
 
-
 # initialize LIST of useless characters + char <--- GLOBAL
 dna_char = {"useless": list("BJOUXZ"), "main": list("ACDEFGHIKLMNPQRSTVWY")}
-
-
-# General insert randomly
 
 
 def insert(sample, p, char_type, spread):
@@ -14,7 +10,8 @@ def insert(sample, p, char_type, spread):
     take in noise as list"""
     noise_ls = gen_noise(sample, p, char_type, spread)
     sample = list(sample)
-    # while bool(noise_ls):  # <--- noise_ls is random
+    if not spread:
+        noise_ls = unspread_noise(noise_ls, sample, p, char_type, spread)
     for noise in noise_ls:
         sample.insert(
             random.randint(1, len(sample)), noise
@@ -30,18 +27,46 @@ def gen_noise(sample, p, char_type, spread):  # <-- frequency probability
     --decide HOW to insert (together or spread)
     """
     length = len(sample)
-    noise_ls = random.choices(char_type, k=int(p * length))
-    if not spread:
-        return ["".join(noise_ls)]  # <--- Noise all bunched up
+    noise_ls = random.choices(char_type, k=round(p * length))
     random.shuffle(noise_ls)
+    print(length)
+    # if len(noise_ls) == 0:
+    #     print(noise_ls)
     return noise_ls
 
 
-# --------------------------------
-# CHANGE THE OPTIONS HERE
-# p=0.01
-# char_type= char_main
-# spread=True
+def unspread_noise(noise: list, sample, p, char_type, spread):
+    """
+    Receive a list of noise where every element is 1 character,
+    flip a coin while looping through the noise to decide
+    whether to combine or not
+    Note: it's possible to have 3 characters concatenated
+    ! Only compatible with insert() for now
+    """
+    # if len(noise) == 0:
+    #     print(noise)
+    output = [noise[0]]
+    i = 1
+    for i in range(1, len(noise)):
+        if random.randint(0, 1):  # flip coin to decide whether or not to combine
+            output[-1] = output[-1] + noise[i]
+        else:
+            output.append(noise[i])
+            output.append("")
+    return [x for x in output if x]  # remove empty string
+
+
+def swap(sample, p):
+    """
+    1 noise correspond to 1 swap
+    will not swap last letter
+    """
+    length = len(sample)
+    sample = list(sample)
+    for rep in range(round(p * length)):
+        i = random.randint(1, length - 1)
+        sample[i - 1], sample[i] = sample[i], sample[i - 1]
+    return "".join(sample)
 
 
 @ck.command()
