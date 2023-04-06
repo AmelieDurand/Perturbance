@@ -29,9 +29,6 @@ def gen_noise(sample, p, char_type, spread):  # <-- frequency probability
     length = len(sample)
     noise_ls = random.choices(char_type, k=round(p * length))
     random.shuffle(noise_ls)
-    print(length)
-    # if len(noise_ls) == 0:
-    #     print(noise_ls)
     return noise_ls
 
 
@@ -43,10 +40,7 @@ def unspread_noise(noise: list, sample, p, char_type, spread):
     Note: it's possible to have 3 characters concatenated
     ! Only compatible with insert() for now
     """
-    # if len(noise) == 0:
-    #     print(noise)
     output = [noise[0]]
-    i = 1
     for i in range(1, len(noise)):
         if random.randint(0, 1):  # flip coin to decide whether or not to combine
             output[-1] = output[-1] + noise[i]
