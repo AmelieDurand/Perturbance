@@ -1,27 +1,74 @@
 import os
 import csv
 import subprocess
+import click as ck
 
 seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+cwd = os.getcwd()
+pert_script_path = os.path.join(cwd, "pert_scripts", "perturb.py")
+deepgoplus_script_path = os.path.join(cwd, "deepgoplus", "main-no-diamond.py")
+pkl_script_path = os.path.abspath("convert_tsv_pkl.py")
+eval_script_path = os.path.abspath("evaluate_deepgoplus.py")
 
 
-def main():
-    pert_script_path = os.path.abspath("pert_scripts/perturb.py")
-    deepgoplus_script_path = os.path.abspath("deepgoplus/main-no-diamond.py")
-    pkl_script_path = os.path.abspath("convert_tsv_pkl.py")
-    eval_script_path = os.path.abspath("evaluate_deepgoplus.py")
+def format_result(results: str, filename: str, iteration: int, pert: float):
+    """Formats the result of the evaluate_deepgoplus script into a csv
+        with Iteration, Smin, Fmax, AUPR as headers
+
+    Args:
+        results (str): Output of evaluate_deepgoplus script
+        filename (str): Name of csv file to write to
+        iteration (int): The index in which the evaluate_deepgoplus script was called in the loop
+        pert (float): Perturbation chance ranging from 0 to 1
+    """
+    metrics = results.stdout.decode("utf-8").split("\n")[-4:-1]
+    with open(filename, "a+", newline="") as csv_writer:
+        writer = csv.writer(csv_writer)
+        # Write the header if the file is empty
+        if csv_writer.tell() == 0:
+            writer.writerow(
+                ["Iteration", "Smin", "Fmax", "AUPR", "Perturbation Chance"]
+            )
+        line = ": ".join(metrics)
+        values = line.split(": ")[1::2]
+        writer.writerow([iteration, values[0], values[1], values[2], pert])
+
+
+ck.command()
+ck.option(
+    "--pert-type",
+    "-pt",
+    type=ck.Choice(["insert", "swap", "delete"]),
+    help="Type of perturbation to apply",
+)
+
+
+def main(pert_type):
     pert_chance = 0.1
 
     # Adds perturbations
-    filename = subprocess.run(
-        ["python", pert_script_path, "-p", str(pert_chance), "-sp", "-s", "1"],
-        stdout=subprocess.PIPE,
-    )
+    filename = ""
+    if pert_type == "delete":
+        # TODO Change to delete script
+        filename = subprocess.run(
+            ["python", pert_script_path, "-p", str(pert_chance), "-sp", "-s", "1"],
+            stdout=subprocess.PIPE,
+        )
+    elif pert_type == "swap":
+        # TODO Change to swap script when written
+        filename = subprocess.run(
+            ["python", pert_script_path, "-p", str(pert_chance), "-sp", "-s", "1"],
+            stdout=subprocess.PIPE,
+        )
+    else:
+        # Default is insert
+        filename = subprocess.run(
+            ["python", pert_script_path, "-p", str(pert_chance), "-sp", "-s", "1"],
+            stdout=subprocess.PIPE,
+        )
     print("Perturbations added")
 
-    filename_path = os.path.join(
-        os.getcwd(), "perturb", filename.stdout.decode().strip()
-    )
+    filename_path = os.path.join(cwd, "perturb", filename.stdout.decode().strip())
     subprocess.run(
         [
             "python",
@@ -66,29 +113,6 @@ def main():
     )
     format_result(result_cc, "results/deepgoplus_cc.csv", 1, pert_chance)
     print("Evaluated CC")
-
-
-def format_result(results: str, filename: str, iteration: int, pert: float):
-    """Formats the result of the evaluate_deepgoplus script into a csv
-        with Iteration, Smin, Fmax, AUPR as headers
-
-    Args:
-        results (str): Output of evaluate_deepgoplus script
-        filename (str): Name of csv file to write to
-        iteration (int): The index in which the evaluate_deepgoplus script was called in the loop
-        pert (float): Perturbation chance ranging from 0 to 1
-    """
-    metrics = results.stdout.decode("utf-8").split("\n")[-4:-1]
-    with open(filename, "a+", newline="") as csv_writer:
-        writer = csv.writer(csv_writer)
-        # Write the header if the file is empty
-        if csv_writer.tell() == 0:
-            writer.writerow(
-                ["Iteration", "Smin", "Fmax", "AUPR", "Perturbation Chance"]
-            )
-        line = ": ".join(metrics)
-        values = line.split(": ")[1::2]
-        writer.writerow([iteration, values[0], values[1], values[2], pert])
 
 
 if __name__ == "__main__":
