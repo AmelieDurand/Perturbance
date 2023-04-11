@@ -80,7 +80,8 @@ def swap(sample, p):
 @ck.option("--spread", "-sp", is_flag=True, help="Perturbation in % to be applied")
 @ck.option("--seed", "-s", help="Seed for random")
 def main(perturbation, char_type, spread, seed):
-    with open("./data/test_data.fa", "r") as f:
+    # with open("./data/test_data.fa", "r") as f:
+    with open("./data/sample.fa", "r") as f:
         database = f.readlines()
     # <------- Need to specify type of perturb
     if seed is not None:

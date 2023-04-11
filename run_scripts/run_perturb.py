@@ -4,6 +4,8 @@ import subprocess
 import click as ck
 
 seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+# pert_chances = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+pert_chances = [0.1]
 cwd = os.getcwd()
 pert_script_path = os.path.join(cwd, "pert_scripts", "perturb.py")
 deepgoplus_script_path = os.path.join(cwd, "deepgoplus", "main-no-diamond.py")
@@ -22,7 +24,7 @@ def format_result(results: str, filename: str, iteration: int, pert: float):
         pert (float): Perturbation chance ranging from 0 to 1
     """
     metrics = results.stdout.decode("utf-8").split("\n")[-4:-1]
-    with open(filename, "a+", newline="") as csv_writer:
+    with open(os.path.join(cwd, "results", filename), "a+", newline="") as csv_writer:
         writer = csv.writer(csv_writer)
         # Write the header if the file is empty
         if csv_writer.tell() == 0:
@@ -44,74 +46,98 @@ def format_result(results: str, filename: str, iteration: int, pert: float):
 )
 def main(type):
     pert_chance = 0.1
+    for pert_chance in pert_chances:
+        for index, seed in enumerate(seeds):
+            # Adds perturbations
+            filename = ""
+            if type == "delete":
+                # TODO Change to delete script
+                filename = subprocess.run(
+                    [
+                        "python",
+                        pert_script_path,
+                        "-p",
+                        str(pert_chance),
+                        "-sp",
+                        "-s",
+                        str(seed),
+                    ],
+                    stdout=subprocess.PIPE,
+                )
+            elif type == "swap":
+                # TODO Change to swap script when written
+                filename = subprocess.run(
+                    [
+                        "python",
+                        pert_script_path,
+                        "-p",
+                        str(pert_chance),
+                        "-sp",
+                        "-s",
+                        str(seed),
+                    ],
+                    stdout=subprocess.PIPE,
+                )
+            else:
+                # Default is insert
+                filename = subprocess.run(
+                    [
+                        "python",
+                        pert_script_path,
+                        "-p",
+                        str(pert_chance),
+                        "-sp",
+                        "-s",
+                        str(seed),
+                    ],
+                    stdout=subprocess.PIPE,
+                )
+            print("Perturbations added")
 
-    # Adds perturbations
-    filename = ""
-    if type == "delete":
-        # TODO Change to delete script
-        filename = subprocess.run(
-            ["python", pert_script_path, "-p", str(pert_chance), "-sp", "-s", "1"],
-            stdout=subprocess.PIPE,
-        )
-    elif type == "swap":
-        # TODO Change to swap script when written
-        filename = subprocess.run(
-            ["python", pert_script_path, "-p", str(pert_chance), "-sp", "-s", "1"],
-            stdout=subprocess.PIPE,
-        )
-    else:
-        # Default is insert
-        filename = subprocess.run(
-            ["python", pert_script_path, "-p", str(pert_chance), "-sp", "-s", "1"],
-            stdout=subprocess.PIPE,
-        )
-    print("Perturbations added")
+            filename_path = os.path.join(
+                cwd, "perturb", filename.stdout.decode().strip()
+            )
+            subprocess.run(
+                [
+                    "python",
+                    deepgoplus_script_path,
+                    "-dr",
+                    "./data",
+                    "-if",
+                    filename_path,
+                    "-t",
+                    "0.3",
+                ]
+            )
+            print("Deepgoplus evaluated")
 
-    filename_path = os.path.join(cwd, "perturb", filename.stdout.decode().strip())
-    subprocess.run(
-        [
-            "python",
-            deepgoplus_script_path,
-            "-dr",
-            "./data",
-            "-if",
-            filename_path,
-            "-t",
-            "0.3",
-        ]
-    )
-    print("Deepgoplus evaluated")
+            # Converts results.tsv from the deepgoplus script into a results.pkl
+            subprocess.run(["python", pkl_script_path])
+            print("Converted to pickle")
 
-    # Converts results.tsv from the deepgoplus script into a results.pkl
-    subprocess.run(["python", pkl_script_path])
-    print("Converted to pickle")
+            # Creates a results folder if it doesn't exist
+            if not os.path.exists("results"):
+                os.makedirs("results")
 
-    # Creates a results folder if it doesn't exist
-    if not os.path.exists("results"):
-        os.makedirs("results")
+            # Evaluate results
+            ontologies = ["mf", "bp", "cc"]
+            for ontology in ontologies:
+                results = subprocess.run(
+                    [
+                        "python",
+                        eval_script_path,
+                        "-o",
+                        ontology,
+                        "-tsdf",
+                        "results.pkl",
+                    ],
+                    stdout=subprocess.PIPE,
+                )
 
-    # Evaluate results
-    result_mf = subprocess.run(
-        ["python", eval_script_path, "-o", "mf", "-tsdf", "results.pkl"],
-        stdout=subprocess.PIPE,
-    )
-    format_result(result_mf, "results/deepgoplus_mf.csv", 1, pert_chance)
-
-    print("Evaluated MF")
-
-    result_bp = subprocess.run(
-        ["python", eval_script_path, "-o", "bp", "-tsdf", "results.pkl"],
-        stdout=subprocess.PIPE,
-    )
-    format_result(result_bp, "results/deepgoplus_bp.csv", 1, pert_chance)
-    print("Evaluated BP")
-
-    result_cc = subprocess.run(
-        ["python", eval_script_path, "-o", "cc", "-tsdf", "results.pkl"],
-        stdout=subprocess.PIPE,
-    )
-    format_result(result_cc, "results/deepgoplus_cc.csv", 1, pert_chance)
-    print("Evaluated CC")
+                format_result(
+                    results, f"deepgoplus_{ontology}_{type}.csv", index + 1, pert_chance
+                )
+                print(f"Evaluated {ontology.upper()}")
 
 
 if __name__ == "__main__":
