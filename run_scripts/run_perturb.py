@@ -34,27 +34,26 @@ def format_result(results: str, filename: str, iteration: int, pert: float):
         writer.writerow([iteration, values[0], values[1], values[2], pert])
 
 
-ck.command()
-ck.option(
-    "--pert-type",
-    "-pt",
+@ck.command()
+@ck.option(
+    "--type",
+    "-t",
+    default="insert",
     type=ck.Choice(["insert", "swap", "delete"]),
     help="Type of perturbation to apply",
 )
-
-
-def main(pert_type):
+def main(type):
     pert_chance = 0.1
 
     # Adds perturbations
     filename = ""
-    if pert_type == "delete":
+    if type == "delete":
         # TODO Change to delete script
         filename = subprocess.run(
             ["python", pert_script_path, "-p", str(pert_chance), "-sp", "-s", "1"],
             stdout=subprocess.PIPE,
         )
-    elif pert_type == "swap":
+    elif type == "swap":
         # TODO Change to swap script when written
         filename = subprocess.run(
             ["python", pert_script_path, "-p", str(pert_chance), "-sp", "-s", "1"],
