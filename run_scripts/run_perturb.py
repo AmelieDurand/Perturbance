@@ -3,10 +3,9 @@ import csv
 import subprocess
 import click as ck
 
-# seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-seeds = [1, 2]
-# pert_chances = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-pert_chances = [0.1]
+seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+pert_chances = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+# pert_chances = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 cwd = os.getcwd()
 pert_script_path = os.path.join(cwd, "pert_scripts", "insert_swap.py")
 deepgoplus_script_path = os.path.join(cwd, "deepgoplus", "main-no-diamond.py")
@@ -41,8 +40,8 @@ def format_result(results: str, filename: str, iteration: int, pert: float):
 @ck.option(
     "--type",
     "-t",
-    default="insert",
-    type=ck.Choice(["insert", "swap", "delete"]),
+    default="insert-spread",
+    type=ck.Choice(["insert", "swap", "delete", "insert-spread"]),
     help="Type of perturbation to apply",
 )
 def main(type):
@@ -78,8 +77,20 @@ def main(type):
                     ],
                     stdout=subprocess.PIPE,
                 )
+            elif type == "insert":
+                filename = subprocess.run(
+                    [
+                        "python",
+                        pert_script_path,
+                        "-p",
+                        str(pert_chance),
+                        "-s",
+                        str(seed),
+                    ],
+                    stdout=subprocess.PIPE,
+                )
             else:
-                # Default is insert
+                # Default is insert with spread
                 filename = subprocess.run(
                     [
                         "python",
@@ -94,9 +105,11 @@ def main(type):
                 )
             print("Perturbations added")
 
+            # Get path to the perturb data
             filename_path = os.path.join(
                 cwd, "perturb", filename.stdout.decode().strip()
             )
+            # Run DeepGoPlus
             subprocess.run(
                 [
                     "python",
@@ -109,7 +122,7 @@ def main(type):
                     "0.3",
                 ]
             )
-            print("Deepgoplus evaluated")
+            print("DeepGoPlus evaluated")
 
             # Converts results.tsv from the deepgoplus script into a results.pkl
             subprocess.run(["python", pkl_script_path])
