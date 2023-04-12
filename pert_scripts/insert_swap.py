@@ -67,9 +67,8 @@ def swap(sample, p):
 @ck.option(
     "--perturbation",
     "-p",
-    default=0.01,
-    required=True,
-    help="Perturbation in % to be applied",
+    default=0.1,
+    help="Perturbation chance to be applied ranging from 0 to 1",
 )
 @ck.option(
     "--char-type",
@@ -91,9 +90,11 @@ def main(perturbation, char_type, spread, seed):
         "w",
     )
     for i in range(0, len(database), 2):
-        f_out.write(database[i])
+        f_out.write("\n" + database[i])
         # <--- Fix: what if pass extra val to insert
-        f_out.write(insert(database[i + 1], perturbation, dna_char[char_type], spread))
+        f_out.write(
+            insert(database[i + 1].strip(), perturbation, dna_char[char_type], spread)
+        )
     f_out.close()
     print(
         f"test_data_perturb_{str(perturbation)+dna_char[char_type][0]+str(spread)}.fa"
