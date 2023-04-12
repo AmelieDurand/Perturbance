@@ -1,4 +1,7 @@
+import os
 import random
+import click as ck
+
 
 def delete(sample, p):
     sample = list(sample)
@@ -7,16 +10,28 @@ def delete(sample, p):
     indices_to_delete = random.sample(range(length), amount_deletions)
     for i in sorted(indices_to_delete, reverse=True):
         del sample[i]
-    return ''.join(sample)
+    return "".join(sample)
 
-#--------------------------------
-# CHANGE THE OPTIONS HERE
-p = 0.01
 
-with open(".\\data\\test_data.fa",'r') as f:
-    database = [line.strip() for line in f.readlines()]
-f_out = open(f".\\test_data_delete_{str(p)}.fa",'w') 
-for i in range(0,len(database),2):
-    f_out.write(database[i] + '\n')
-    f_out.write(delete(database[i+1], p) + '\n') 
-f_out.close()
+@ck.command()
+@ck.option(
+    "--perturbation",
+    "-p",
+    default=0.01,
+    help="Perturbation chance to be applied ranging from 0 to 1",
+)
+@ck.option("--seed", "-s", help="Seed for random")
+def main(perturbation, seed):
+    with open(os.path.join(os.getcwd(), "data", "test_data.fa"), "r") as f:
+        database = [line.strip() for line in f.readlines()]
+    if seed is not None:
+        random.seed(seed)
+    f_out = open(f"perturb/test_data_delete_{str(perturbation)}.fa", "w")
+    for i in range(0, len(database), 2):
+        f_out.write(database[i] + "\n")
+        f_out.write(delete(database[i + 1], perturbation) + "\n")
+    f_out.close()
+
+
+if __name__ == "__main__":
+    main()
