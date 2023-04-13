@@ -1,5 +1,5 @@
 FROM python:3.7
-RUN apt-get update && apt-get install -y nano
+RUN apt-get update && apt-get install -y nano && apt-get install -y micro
 RUN wget http://github.com/bbuchfink/diamond/releases/download/v2.0.2/diamond-linux64.tar.gz && tar xzf diamond-linux64.tar.gz && mv diamond /usr/bin/diamond
 RUN pip install pip --upgrade
 RUN pip install Click==7.1.2
