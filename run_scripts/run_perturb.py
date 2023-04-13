@@ -51,32 +51,10 @@ def main(type):
             filename = ""
             if type == "delete":
                 # TODO Change to delete script
-                filename = subprocess.run(
-                    [
-                        "python",
-                        pert_script_path,
-                        "-p",
-                        str(pert_chance),
-                        "-sp",
-                        "-s",
-                        str(seed),
-                    ],
-                    stdout=subprocess.PIPE,
-                )
+                print("Deleted Not implemented")
             elif type == "swap":
                 # TODO Change to swap script when written
-                filename = subprocess.run(
-                    [
-                        "python",
-                        pert_script_path,
-                        "-p",
-                        str(pert_chance),
-                        "-sp",
-                        "-s",
-                        str(seed),
-                    ],
-                    stdout=subprocess.PIPE,
-                )
+                print("Swaped Not implemented")
             elif type == "insert":
                 filename = subprocess.run(
                     [
