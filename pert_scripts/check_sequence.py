@@ -1,8 +1,11 @@
 
 import pickle
 
-with open("perturb\\saved_dictionary.pkl", 'rb') as f:
+with open("pert_scripts\\saved_dictionary.pkl", 'rb') as f:
     label_dict = pickle.load(f)
+assert 'DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEGQKVEFSIENGAK' in label_dict.keys()
+assert not 'DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEG' in label_dict.keys()
+
 
 def is_label_same(seq_pert, label_pert):
     """
@@ -10,20 +13,21 @@ def is_label_same(seq_pert, label_pert):
     Pass if given sequence, the id remains the same
     Alert if given seequence, the id changes
     """
-    label_pert = label_pert[1:] #get rid of ">" at the start
+    label_pert = label_pert[1:].strip() #get rid of ">", "\n"
     if seq_pert in label_dict.keys():
         if label_dict[seq_pert] != label_pert: #<-- check if \n at the end disrupts
             return False
     return True
 
 #---- RUNNING
-file_perturb = "perturb\\test_data_perturb_0.01aTrue.fa"
+file_perturb = "perturb\\test_data_perturb_1.0ATrue.fa"
 with open(file_perturb) as f_pert:
     data = f_pert.readlines()
-    odd_seq = []
-    for i in range(0, len(data), 2):
+    odd_seq_index = []
+    for i in range(0, len(data)-1, 2):
         if not is_label_same(data[i+1],data[i]):
-            odd_seq.append(data[i])
+            odd_seq_index.append(i)
+print(odd_seq_index)
         
 
 
