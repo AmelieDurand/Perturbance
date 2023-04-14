@@ -49,6 +49,15 @@ def unspread_noise(noise: list, sample, p, char_type, spread):
             output.append("")
     return [x for x in output if x]  # remove empty string
 
+def substitute(sample, p, char_type, spread):
+    """Randomly select a spot to insert ONE thing by concatenating in 3 parts
+    take in noise as list"""
+    noise_ls = gen_noise(sample, p, char_type, spread)
+    sample = list(sample)
+    for noise in noise_ls:
+        i = random.randint(1,len(sample)-1)
+        sample[i] = noise
+    return "".join(sample)
 
 def swap(sample, p):
     """
