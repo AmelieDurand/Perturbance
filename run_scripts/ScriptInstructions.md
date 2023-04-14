@@ -7,7 +7,7 @@
 
   **FROM THE DOCKERFILE FOUND IN THE GITHUB**
   - docker build -t deepgoplus .
-  - docker run --tm -it deepgoplus
+  - docker run --rm -it deepgoplus
 
 **You're now in the deepgoplus container**
 
