@@ -35,7 +35,10 @@ python deletion.py -p <Perturbation Chance>
 ```bash
 python run_script.py -t <type>
 ```
-Valid types include : "insert", "swap", "delete" & "insert-spread"
+Valid types include : "insert", "swap", "delete" & "insert-spread".
+
+Each type refers to the perturbation script that will be run.
+
 Defaults to insert-spread
 
 The run script will 
@@ -44,5 +47,5 @@ The run script will
 - Run the convert_tsv_pkl.py script to turn the results.tsv into a results.pkl
 - Evaluate the results in MF, BP & CC with the evaluate_deepgoplus.py script
 
-THe run script runs 10 alphas for each perturbation chance.
+The run script runs 10 alphas for each perturbation chance.
 As of now the perturbation chances range from 0.1-0.9 in increments of 0.1
