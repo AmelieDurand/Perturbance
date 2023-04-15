@@ -17,23 +17,28 @@
 All perturbation scripts have an optional ```-s``` CLI option for seeding the random
 ### Insert With Spread
 ```bash
-python insert_swap.py -p <Perturbation Chance> -sp
+python <path to insert_swap.py> -p <Perturbation Chance> -sp
 ```
 ### Insert without Spread
 ```bash
-python insert_swap.py -p <Perturbation Chance>
+python <path to insert_swap.py> -p <Perturbation Chance>
 ```
 ### Swap
 TODO
 ### Delete
 ```bash
-python deletion.py -p <Perturbation Chance>
+python <path to deletion.py> -p <Perturbation Chance>
 ```
 
 ## Run Scripts
+**BEFORE RUNNING**
+Add a folder called perturb
+```bash
+mkdir perturb
+```
 
 ```bash
-python run_script.py -t <type>
+python <path to run_script.py> -t <type>
 ```
 Valid types include : "insert", "swap", "delete" & "insert-spread".
 
