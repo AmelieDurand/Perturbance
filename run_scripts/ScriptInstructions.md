@@ -38,7 +38,7 @@ mkdir perturb
 ```
 
 ```bash
-python <path to run_script.py> -t <type>
+python <path to run_pert.py> -t <type>
 ```
 Valid types include : "insert", "swap", "delete" & "insert-spread".
 
