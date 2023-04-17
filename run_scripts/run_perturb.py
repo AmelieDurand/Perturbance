@@ -13,7 +13,8 @@ eval_script_path = os.path.abspath("evaluate_deepgoplus.py")
 
 
 def format_result(results: str, filename: str, iteration: int, pert: float):
-    """Formats the result of the evaluate_deepgoplus script into a csv
+    """
+    Formats the result of the evaluate_deepgoplus script into a csv
         with Iteration, Smin, Fmax, AUPR as headers
 
     Args:
@@ -35,26 +36,54 @@ def format_result(results: str, filename: str, iteration: int, pert: float):
         writer.writerow([iteration, values[0], values[1], values[2], pert])
 
 
-@ck.command()
+class CLICommand(ck.Command):
+    """
+    A custom Command class that handles option dependency
+
+    This custome class will throw an error if the letters option is used with anythign but insert or insert-spread.
+    It will also throw an error if it's not used when type is insert or insert-spread
+    """
+    def invoke(self, ctx):
+        if(ctx.params.get("type") in ["insert", "insert-spread"] and ctx.params.get("char_type") not in ["useless", "main"]):
+            # Default value for char_type is useless
+            ctx.params.update({"char_type": "useless"})
+        if(ctx.params.get("type") not in ["insert", "insert-spread"] and ctx.params.get("char_type") in ["useless", "main"]):
+            raise ck.BadOptionUsage('char_type', "Cannot specify char-type when type is not insert or insert-spread")
+        return super().invoke(ctx)
+
+
+@ck.command(cls=CLICommand)
 @ck.option(
     "--type",
     "-t",
     default="insert-spread",
-    type=ck.Choice(["insert", "swap", "delete", "insert-spread"]),
+    type=ck.Choice(["insert", "swap", "delete", "insert-spread", "substitution"]),
     help="Type of perturbation to apply",
 )
-# TODO ADD substitution, useful letter
-def main(type):
+@ck.option(
+    "--char-type",
+    "-c",
+    required=False,
+    type=ck.Choice(["useless", "main"]),
+    help="Type of letters to used when inserting. Can only be used when type is insert or insert-spread. Defaults to useless",
+)
+def main(type, char_type):
     for pert_chance in pert_chances:
         for index, seed in enumerate(seeds):
             # Adds perturbations
             filename = ""
             if type == "delete":
                 # TODO Change to delete script
-                print("Deleted Not implemented")
+                print("Deletetion Not implemented")
+                exit()
             elif type == "swap":
                 # TODO Change to swap script when written
-                print("Swaped Not implemented")
+                print("Swap Not implemented")
+                exit()
+            elif type == "substitution":
+                # TODO Change to swap script when written
+                print("Substitution Not implemented")
+                exit()
             elif type == "insert":
                 filename = subprocess.run(
                     [
@@ -64,6 +93,8 @@ def main(type):
                         str(pert_chance),
                         "-s",
                         str(seed),
+                        "-c",
+                        char_type
                     ],
                     stdout=subprocess.PIPE,
                 )
@@ -78,6 +109,8 @@ def main(type):
                         "-sp",
                         "-s",
                         str(seed),
+                        "-c",
+                        char_type
                     ],
                     stdout=subprocess.PIPE,
                 )
