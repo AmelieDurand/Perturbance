@@ -7,6 +7,7 @@ seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 pert_chances = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 cwd = os.getcwd()
 pert_script_path = os.path.join(cwd, "pert_scripts", "insert_swap.py")
+del_script_path = os.path.join(cwd, "pert_scripts", "deletion.py")
 deepgoplus_script_path = os.path.join(cwd, "deepgoplus", "main-no-diamond.py")
 pkl_script_path = os.path.abspath("convert_tsv_pkl.py")
 eval_script_path = os.path.abspath("evaluate_deepgoplus.py")
@@ -43,12 +44,20 @@ class CLICommand(ck.Command):
     This custome class will throw an error if the letters option is used with anythign but insert or insert-spread.
     It will also throw an error if it's not used when type is insert or insert-spread
     """
+
     def invoke(self, ctx):
-        if(ctx.params.get("type") in ["insert", "insert-spread"] and ctx.params.get("char_type") not in ["useless", "main"]):
+        if ctx.params.get("type") in ["insert", "insert-spread"] and ctx.params.get(
+            "char_type"
+        ) not in ["useless", "main"]:
             # Default value for char_type is useless
             ctx.params.update({"char_type": "useless"})
-        if(ctx.params.get("type") not in ["insert", "insert-spread"] and ctx.params.get("char_type") in ["useless", "main"]):
-            raise ck.BadOptionUsage('char_type', "Cannot specify char-type when type is not insert or insert-spread")
+        if ctx.params.get("type") not in ["insert", "insert-spread"] and ctx.params.get(
+            "char_type"
+        ) in ["useless", "main"]:
+            raise ck.BadOptionUsage(
+                "char_type",
+                "Cannot specify char-type when type is not insert or insert-spread",
+            )
         return super().invoke(ctx)
 
 
@@ -57,7 +66,16 @@ class CLICommand(ck.Command):
     "--type",
     "-t",
     default="insert-spread",
-    type=ck.Choice(["insert", "swap", "delete", "insert-spread", "substitution"]),
+    type=ck.Choice(
+        [
+            "swap",
+            "delete",
+            "insert",
+            "insert-spread",
+            "substitution",
+            "substitution-spread",
+        ]
+    ),
     help="Type of perturbation to apply",
 )
 @ck.option(
@@ -67,23 +85,77 @@ class CLICommand(ck.Command):
     type=ck.Choice(["useless", "main"]),
     help="Type of letters to used when inserting. Can only be used when type is insert or insert-spread. Defaults to useless",
 )
-def main(type, char_type):
+def main(type: str, char_type: str):
+    """
+    Perturbs data and measures the metrics of the DeepGoPlus model.
+
+    Runs the proper perturbation on the test file, runs the DeepGoPlus model on that newly perturbed file,
+    Turns results into a pickle file, measures the metrics for BP, CC and MF ontologies and writes them into csv files.
+    Runs for 10 alphas for each pertubation. Pertubation range from 0.1 to 0.9 in increments of 0.1
+
+    Args:
+        type (str): Type of perturbation to apply
+        char_type (str): Only when perturbation is insert or insert-spread. Types of characters to insert
+    """
     for pert_chance in pert_chances:
         for index, seed in enumerate(seeds):
             # Adds perturbations
             filename = ""
             if type == "delete":
-                # TODO Change to delete script
-                print("Deletetion Not implemented")
-                exit()
+                filename = subprocess.run(
+                    [
+                        "python",
+                        del_script_path,
+                        "-p",
+                        str(pert_chance),
+                        "-s",
+                        str(seed),
+                    ],
+                    stdout=subprocess.PIPE,
+                )
             elif type == "swap":
-                # TODO Change to swap script when written
-                print("Swap Not implemented")
-                exit()
+                filename = subprocess.run(
+                    [
+                        "python",
+                        pert_script_path,
+                        "-p",
+                        str(pert_chance),
+                        "-t",
+                        type,
+                        "-s",
+                        str(seed),
+                    ],
+                    stdout=subprocess.PIPE,
+                )
             elif type == "substitution":
-                # TODO Change to swap script when written
-                print("Substitution Not implemented")
-                exit()
+                filename = subprocess.run(
+                    [
+                        "python",
+                        pert_script_path,
+                        "-p",
+                        str(pert_chance),
+                        "-t",
+                        type,
+                        "-s",
+                        str(seed),
+                    ],
+                    stdout=subprocess.PIPE,
+                )
+            elif type == "substitution-spread":
+                filename = subprocess.run(
+                    [
+                        "python",
+                        pert_script_path,
+                        "-p",
+                        str(pert_chance),
+                        "-t",
+                        "substitution",
+                        "-sp",
+                        "-s",
+                        str(seed),
+                    ],
+                    stdout=subprocess.PIPE,
+                )
             elif type == "insert":
                 filename = subprocess.run(
                     [
@@ -91,31 +163,34 @@ def main(type, char_type):
                         pert_script_path,
                         "-p",
                         str(pert_chance),
+                        "-t",
+                        type,
+                        "-c",
+                        char_type,
                         "-s",
                         str(seed),
-                        "-c",
-                        char_type
                     ],
                     stdout=subprocess.PIPE,
                 )
             else:
-                # Default is insert with spread
+                # Default is insert-spread
                 filename = subprocess.run(
                     [
                         "python",
                         pert_script_path,
                         "-p",
                         str(pert_chance),
+                        "-t",
+                        "insert",
+                        "-c",
+                        char_type,
                         "-sp",
                         "-s",
                         str(seed),
-                        "-c",
-                        char_type
                     ],
                     stdout=subprocess.PIPE,
                 )
             print("Perturbations added")
-
             # Get path to the perturb data
             filename_path = os.path.join(
                 cwd, "perturb", filename.stdout.decode().strip()

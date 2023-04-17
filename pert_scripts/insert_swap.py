@@ -1,5 +1,7 @@
 import random
+from typing import Callable
 import click as ck
+import os
 
 # initialize LIST of useless characters + char <--- GLOBAL
 dna_char = {"useless": list("BJOUXZ"), "main": list("ACDEFGHIKLMNPQRSTVWY")}
@@ -49,15 +51,17 @@ def unspread_noise(noise: list, sample, p, char_type, spread):
             output.append("")
     return [x for x in output if x]  # remove empty string
 
+
 def substitute(sample, p, char_type, spread):
     """Randomly select a spot to insert ONE thing by concatenating in 3 parts
     take in noise as list"""
     noise_ls = gen_noise(sample, p, char_type, spread)
     sample = list(sample)
     for noise in noise_ls:
-        i = random.randint(1,len(sample)-1)
+        i = random.randint(1, len(sample) - 1)
         sample[i] = noise
     return "".join(sample)
+
 
 def swap(sample, p):
     """
@@ -72,12 +76,34 @@ def swap(sample, p):
     return "".join(sample)
 
 
+def getPerturbation(type):
+    """
+    Switch statement that returns the perturbation function based on the
+    given perturbation string.
+
+    Args:
+        type (str): type of perturbation to apple.
+
+    Returns:
+        Callable : The func that applies the requested perturbation
+    """
+    pert = {"insert": insert, "swap": swap, "substitution": substitute}
+    return pert.get(type, "Invalid type. No perturbations found")
+
+
 @ck.command()
 @ck.option(
     "--perturbation",
     "-p",
     default=0.1,
     help="Perturbation chance to be applied ranging from 0 to 1",
+)
+@ck.option(
+    "--type",
+    "-t",
+    default="insert",
+    type=ck.Choice(["insert", "swap", "substitution"]),
+    help="Type of perturbation to apply",
 )
 @ck.option(
     "--char-type",
@@ -87,26 +113,35 @@ def swap(sample, p):
 )
 @ck.option("--spread", "-sp", is_flag=True, help="Perturbation in % to be applied")
 @ck.option("--seed", "-s", help="Seed for random")
-def main(perturbation, char_type, spread, seed):
-    # with open("./data/test_data.fa", "r") as f:
-    with open("./data/sample.fa", "r") as f:
+def main(perturbation: float, type: str, char_type: str, spread: bool, seed):
+    cwd = os.getcwd()
+    with open(os.path.join(cwd, "data", "sample.fa"), "r") as f:
         database = f.readlines()
-    # <------- Need to specify type of perturb
     if seed is not None:
         random.seed(seed)
+    spread_text = "_spread" if spread else ""
     f_out = open(
-        f"./perturb/test_data_perturb_{str(perturbation)+dna_char[char_type][0]+str(spread)}.fa",
+        os.path.join(
+            cwd,
+            "perturb",
+            f"test_data_{type}_{str(perturbation)+dna_char[char_type][0] + spread_text}.fa",
+        ),
         "w",
     )
+    perturb: Callable = getPerturbation(type)
     for i in range(0, len(database), 2):
         f_out.write("\n" + database[i])
-        # <--- Fix: what if pass extra val to insert
-        f_out.write(
-            insert(database[i + 1].strip(), perturbation, dna_char[char_type], spread)
-        )
+        if type == "swap":
+            f_out.write(perturb(database[i + 1].strip(), perturbation))
+        else:
+            f_out.write(
+                perturb(
+                    database[i + 1].strip(), perturbation, dna_char[char_type], spread
+                )
+            )
     f_out.close()
     print(
-        f"test_data_perturb_{str(perturbation)+dna_char[char_type][0]+str(spread)}.fa"
+        f"test_data_{type}_{str(perturbation)+dna_char[char_type][0]+ spread_text}.fa"
     )
 
 
