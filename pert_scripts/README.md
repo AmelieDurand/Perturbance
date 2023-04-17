@@ -1,1 +1,18 @@
-If you have the same option: (p,char_type,spread), the script WILL OVERWRITE your previous perturbed data file
+## How to run check_sequence.py
+
+1-- Download uniprot_sprot.fasta.gz and put in same folder as script
+2-- FIRST write this in script and run
+from Bio import SeqIO
+import gzip
+
+label_dic = {}
+with gzip.open("perturb\\uniprot_sprot.fasta.gz",'rt') as seq_bank:
+    for record in SeqIO.parse(seq_bank, "fasta"):
+        label_dic[record.seq] = record.id
+with open('perturb\\saved_dictionary.pkl', 'wb') as f:
+    pickle.dump(label_dic, f)
+
+3-- To test script is running well, paste this at the top of test .fa file
+>CSPA_YERENFAKE
+DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEGQKVEFSIENGAK
+    When run, this script should return a list containing 0
