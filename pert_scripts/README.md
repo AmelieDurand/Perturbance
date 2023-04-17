@@ -1,6 +1,7 @@
 ## How to run check_sequence.py
 
 1-- Download uniprot_sprot.fasta.gz and put in same folder as script
+
 2-- FIRST write this in script and run
 ```
 from Bio import SeqIO
