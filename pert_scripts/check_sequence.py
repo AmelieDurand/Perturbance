@@ -3,10 +3,10 @@ import pickle
 import random
 import os
 
-with open(os.path.join("pert_scripts","labels_uniprot.pkl"), 'rb') as f:
+with open(os.path.join("pert_scripts", "labels_uniprot.pkl"), "rb") as f:
     label_dict = pickle.load(f)
-assert 'DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEGQKVEFSIENGAK' in label_dict.keys()
-assert label_dict['DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEGQKVEFSIENGAK'] == 'CSPA_YEREN'
+assert "DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEGQKVEFSIENGAK" in label_dict.keys()
+assert label_dict["DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEGQKVEFSIENGAK"] == "CSPA_YEREN"
 
 
 def is_label_same(seq_pert, label_pert):
@@ -15,28 +15,28 @@ def is_label_same(seq_pert, label_pert):
     Pass if given sequence, the id remains the same
     Alert if given seequence, the id changes
     """
-    label_pert = label_pert[1:] #get rid of ">"
+    label_pert = label_pert[1:]  # get rid of ">"
     if seq_pert in label_dict.keys():
-        if label_dict[seq_pert] != label_pert: #<-- check if \n at the end disrupts
+        if label_dict[seq_pert] != label_pert:  # <-- check if \n at the end disrupts
             return False
     return True
 
-#---- RUNNING, iterate over all 
+
+# ---- RUNNING, iterate over all
 
 for filename in os.listdir("perturb"):
     f = os.path.join("perturb", filename)
     # checking if it is a file
-    if os.path.isfile(f) and filename.startswith("test_data_insert"): #specify what file
+    if os.path.isfile(f) and filename.startswith(
+        "test_data_insert"
+    ):  # specify what file
         with open(f) as f_pert:
             data = f_pert.readlines()
             odd_seq_index = []
-            for i in range(0, len(data)-1, 2):
-                if not is_label_same(data[i+1].strip(),
-                                    data[i].strip()):
+            for i in range(0, len(data) - 1, 2):
+                if not is_label_same(data[i + 1].strip(), data[i].strip()):
                     odd_seq_index.append(i)
-        print([data[i] for i in odd_seq_index] )
-
-
+        print([data[i] for i in odd_seq_index])
 
 
 """ --------------- Note to Self
@@ -55,7 +55,6 @@ print('DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEGQKVEFSIENGAK' in label_dict.keys()) #<-
 print('DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEG' in label_dict.keys()) #<-- False
 
 """
-
 
 
 """ INSTRUCTION
