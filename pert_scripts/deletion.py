@@ -22,7 +22,7 @@ def delete(sample, p):
 )
 @ck.option("--seed", "-s", help="Seed for random")
 def main(perturbation, seed):
-    with open(os.path.join(os.getcwd(), "data", "test_data.fa"), "r") as f:
+    with open(os.path.join("/deepgoplus", "data", "test_data.fa"), "r") as f:
         database = [line.strip() for line in f.readlines()]
     if seed is not None:
         random.seed(seed)

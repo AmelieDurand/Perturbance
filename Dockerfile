@@ -1,6 +1,5 @@
 FROM python:3.7
-RUN apt-get update && apt-get install -y nano && apt-get install -y micro
-RUN wget http://github.com/bbuchfink/diamond/releases/download/v2.0.2/diamond-linux64.tar.gz && tar xzf diamond-linux64.tar.gz && mv diamond /usr/bin/diamond
+RUN apt-get update
 RUN pip install pip --upgrade
 RUN pip install Click==7.1.2
 RUN pip install matplotlib==3.3.2
@@ -14,6 +13,8 @@ RUN pip install deepgoplus
 COPY . /deepgoplus/
 WORKDIR /deepgoplus
 RUN tar xzf ./data-1.0.6.tar.gz
-RUN mkdir /home/results #&& mkdir /home/metrics && mkdir /home/scripts
+# For Singularity, needs write permission
+RUN chmod -R o+w /deepgoplus/
+
 #Set bash shell as entrypoint
 ENTRYPOINT [ "/bin/bash"]

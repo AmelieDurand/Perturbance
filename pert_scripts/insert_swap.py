@@ -114,15 +114,14 @@ def getPerturbation(type):
 @ck.option("--spread", "-sp", is_flag=True, help="Perturbation in % to be applied")
 @ck.option("--seed", "-s", help="Seed for random")
 def main(perturbation: float, type: str, char_type: str, spread: bool, seed):
-    cwd = os.getcwd()
-    with open(os.path.join(cwd, "data", "sample.fa"), "r") as f:
+    with open(os.path.join("/deepgoplus", "data", "test_data.fa"), "r") as f:
         database = f.readlines()
     if seed is not None:
         random.seed(seed)
     spread_text = "_spread" if spread else ""
     f_out = open(
         os.path.join(
-            cwd,
+            "/deepgoplus",
             "perturb",
             f"test_data_{type}_{str(perturbation)+dna_char[char_type][0] + spread_text}.fa",
         ),

@@ -5,10 +5,9 @@ import click as ck
 
 seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 pert_chances = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-cwd = os.getcwd()
-pert_script_path = os.path.join(cwd, "pert_scripts", "insert_swap.py")
-del_script_path = os.path.join(cwd, "pert_scripts", "deletion.py")
-deepgoplus_script_path = os.path.join(cwd, "deepgoplus", "main-no-diamond.py")
+pert_script_path = os.path.join("/deepgoplus", "pert_scripts", "insert_swap.py")
+del_script_path = os.path.join("/deepgoplus", "pert_scripts", "deletion.py")
+deepgoplus_script_path = os.path.join("/deepgoplus", "deepgoplus", "main-no-diamond.py")
 pkl_script_path = os.path.abspath("convert_tsv_pkl.py")
 eval_script_path = os.path.abspath("evaluate_deepgoplus.py")
 
@@ -25,7 +24,9 @@ def format_result(results: str, filename: str, iteration: int, pert: float):
         pert (float): Perturbation chance ranging from 0 to 1
     """
     metrics = results.stdout.decode("utf-8").split("\n")[-4:-1]
-    with open(os.path.join(cwd, "results", filename), "a+", newline="") as csv_writer:
+    with open(
+        os.path.join("/deepgoplus", "results", filename), "a+", newline=""
+    ) as csv_writer:
         writer = csv.writer(csv_writer)
         # Write the header if the file is empty
         if csv_writer.tell() == 0:
@@ -46,17 +47,23 @@ class CLICommand(ck.Command):
     """
 
     def invoke(self, ctx):
-        if ctx.params.get("type") in ["insert", "insert-spread"] and ctx.params.get(
-            "char_type"
-        ) not in ["useless", "main"]:
+        if ctx.params.get("type") in [
+            "insert",
+            "insert-spread",
+            "substitution",
+            "substitution-spread",
+        ] and ctx.params.get("char_type") not in ["useless", "main"]:
             # Default value for char_type is useless
             ctx.params.update({"char_type": "useless"})
-        if ctx.params.get("type") not in ["insert", "insert-spread"] and ctx.params.get(
-            "char_type"
-        ) in ["useless", "main"]:
+        if ctx.params.get("type") not in [
+            "insert",
+            "insert-spread",
+            "substitution",
+            "substitution-spread",
+        ] and ctx.params.get("char_type") in ["useless", "main"]:
             raise ck.BadOptionUsage(
                 "char_type",
-                "Cannot specify char-type when type is not insert or insert-spread",
+                "Cannot specify char-type when type is not insert, insert-spread, substitution or substitution-spread",
             )
         return super().invoke(ctx)
 
@@ -136,6 +143,8 @@ def main(type: str, char_type: str):
                         str(pert_chance),
                         "-t",
                         type,
+                        "-c",
+                        char_type,
                         "-s",
                         str(seed),
                     ],
@@ -151,6 +160,8 @@ def main(type: str, char_type: str):
                         "-t",
                         "substitution",
                         "-sp",
+                        "-c",
+                        char_type,
                         "-s",
                         str(seed),
                     ],
@@ -193,7 +204,7 @@ def main(type: str, char_type: str):
             print("Perturbations added")
             # Get path to the perturb data
             filename_path = os.path.join(
-                cwd, "perturb", filename.stdout.decode().strip()
+                "/deepgoplus", "perturb", filename.stdout.decode().strip()
             )
             # Run DeepGoPlus
             subprocess.run(
@@ -232,10 +243,26 @@ def main(type: str, char_type: str):
                     ],
                     stdout=subprocess.PIPE,
                 )
-
-                format_result(
-                    results, f"deepgoplus_{ontology}_{type}.csv", index + 1, pert_chance
-                )
+                # TODO make into Dict
+                if type in [
+                    "insert",
+                    "insert-spread",
+                    "substitution",
+                    "substitution-spread",
+                ]:
+                    format_result(
+                        results,
+                        f"deepgoplus_{ontology}_{type}_{char_type}.csv",
+                        index + 1,
+                        pert_chance,
+                    )
+                else:
+                    format_result(
+                        results,
+                        f"deepgoplus_{ontology}_{type}.csv",
+                        index + 1,
+                        pert_chance,
+                    )
                 print(f"Evaluated {ontology.upper()}")
 
 
