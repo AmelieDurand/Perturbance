@@ -8,8 +8,8 @@ pert_chances = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 pert_script_path = os.path.join("/deepgoplus", "pert_scripts", "insert_swap.py")
 del_script_path = os.path.join("/deepgoplus", "pert_scripts", "deletion.py")
 deepgoplus_script_path = os.path.join("/deepgoplus", "deepgoplus", "main-no-diamond.py")
-pkl_script_path = os.path.abspath("convert_tsv_pkl.py")
-eval_script_path = os.path.abspath("evaluate_deepgoplus.py")
+pkl_script_path = os.path.join("/deepgoplus", "convert_tsv_pkl.py")
+eval_script_path = os.path.join("/deepgoplus", "evaluate_deepgoplus.py")
 
 
 def format_result(results: str, filename: str, iteration: int, pert: float):
@@ -212,7 +212,7 @@ def main(type: str, char_type: str):
                     "python",
                     deepgoplus_script_path,
                     "-dr",
-                    "./data",
+                    os.path.join("/deepgoplus", "data"),
                     "-if",
                     filename_path,
                     "-t",

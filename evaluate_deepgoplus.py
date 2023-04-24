@@ -17,53 +17,54 @@ from utils import FUNC_DICT, Ontology, NAMESPACES
 from matplotlib import pyplot as plt
 import json
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.INFO)
 
 
 @ck.command()
 @ck.option(
-    '--train-data-file', '-trdf', default='data/train_data.pkl',
-    help='Data file with training features')
+    "--train-data-file",
+    "-trdf",
+    default="/deepgoplus/data/train_data.pkl",
+    help="Data file with training features",
+)
 @ck.option(
-    '--test-data-file', '-tsdf', default='data/predictions.pkl',
-    help='Test data file')
+    "--test-data-file",
+    "-tsdf",
+    default="/deepgoplus/data/predictions.pkl",
+    help="Test data file",
+)
 @ck.option(
-    '--terms-file', '-tf', default='data/terms.pkl',
-    help='Data file with sequences and complete set of annotations')
+    "--terms-file",
+    "-tf",
+    default="/deepgoplus/data/terms.pkl",
+    help="Data file with sequences and complete set of annotations",
+)
 @ck.option(
-    '--diamond-scores-file', '-dsf', default='data/test_diamond.res',
-    help='Diamond output')
-@ck.option(
-    '--ont', '-o', default='mf',
-    help='GO subontology (bp, mf, cc)')
-@ck.option(
-    '--alpha', '-a', default=50,
-    help='Alpha for for combining scores')
-def main(train_data_file, test_data_file, terms_file,
-         diamond_scores_file, ont, alpha):
-
-    
-    
-    last_release_metadata = 'metadata/last_release.json' 
-    with open(last_release_metadata, 'r') as f:
+    "--diamond-scores-file",
+    "-dsf",
+    default="/deepgoplus/data/test_diamond.res",
+    help="Diamond output",
+)
+@ck.option("--ont", "-o", default="mf", help="GO subontology (bp, mf, cc)")
+@ck.option("--alpha", "-a", default=50, help="Alpha for for combining scores")
+def main(train_data_file, test_data_file, terms_file, diamond_scores_file, ont, alpha):
+    last_release_metadata = "/deepgoplus/metadata/last_release.json"
+    with open(last_release_metadata, "r") as f:
         last_release_data = json.load(f)
-        alpha = last_release_data['alphas'][ont]
+        alpha = last_release_data["alphas"][ont]
 
-
-
-
-    go_rels = Ontology('data/go.obo', with_rels=True)
+    go_rels = Ontology("/deepgoplus/data/go.obo", with_rels=True)
     terms_df = pd.read_pickle(terms_file)
-    terms = terms_df['terms'].values.flatten()
+    terms = terms_df["terms"].values.flatten()
     terms_dict = {v: i for i, v in enumerate(terms)}
 
     train_df = pd.read_pickle(train_data_file)
     test_df = pd.read_pickle(test_data_file)
     print("Length of test set: " + str(len(test_df)))
-    
-    annotations = train_df['prop_annotations'].values
+
+    annotations = train_df["prop_annotations"].values
     annotations = list(map(lambda x: set(x), annotations))
-    test_annotations = test_df['prop_annotations'].values
+    test_annotations = test_df["prop_annotations"].values
     test_annotations = list(map(lambda x: set(x), test_annotations))
     go_rels.calculate_ic(annotations + test_annotations)
 
@@ -76,7 +77,6 @@ def main(train_data_file, test_data_file, terms_file,
     for i, row in enumerate(train_df.itertuples()):
         prot_index[row.proteins] = i
 
-    
     # BLAST Similarity (Diamond)
     diamond_scores = {}
     with open(diamond_scores_file) as f:
@@ -87,7 +87,7 @@ def main(train_data_file, test_data_file, terms_file,
             diamond_scores[it[0]][it[1]] = float(it[2])
 
     blast_preds = []
-    #print('Diamond preds')
+    # print('Diamond preds')
     for i, row in enumerate(test_df.itertuples()):
         annots = {}
         prot_id = row.proteins
@@ -111,18 +111,18 @@ def main(train_data_file, test_data_file, terms_file,
             for go_id, score in zip(allgos, sim):
                 annots[go_id] = score
         blast_preds.append(annots)
-        
+
     # DeepGOPlus
     go_set = go_rels.get_namespace_terms(NAMESPACES[ont])
     go_set.remove(FUNC_DICT[ont])
-    labels = test_df['prop_annotations'].values
+    labels = test_df["prop_annotations"].values
     labels = list(map(lambda x: set(filter(lambda y: y in go_set, x)), labels))
     # print(len(go_set))
     deep_preds = []
     # alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
-    alphas = {NAMESPACES['mf']: 0, NAMESPACES['bp']: 0, NAMESPACES['cc']: 0}
+    alphas = {NAMESPACES["mf"]: 0, NAMESPACES["bp"]: 0, NAMESPACES["cc"]: 0}
 
-    with open(last_release_metadata, 'r') as f:
+    with open(last_release_metadata, "r") as f:
         last_release_data = json.load(f)
         alpha = last_release_data["alphas"][ont]
         alphas[NAMESPACES[ont]] = alpha
@@ -161,7 +161,7 @@ def main(train_data_file, test_data_file, terms_file,
     #                 annots[a_id] = score
     #     deepgo_preds.append(annots)
 
-    #print('Computing Fmax')
+    # print('Computing Fmax')
     fmax = 0.0
     tmax = 0.0
     precisions = []
@@ -169,7 +169,7 @@ def main(train_data_file, test_data_file, terms_file,
     smin = 1000000.0
     rus = []
     mis = []
-    for t in range(1, 101): # the range in this loop has influence in the AUPR output
+    for t in range(1, 101):  # the range in this loop has influence in the AUPR output
         threshold = t / 100.0
         preds = []
         for i, row in enumerate(test_df.itertuples()):
@@ -182,14 +182,18 @@ def main(train_data_file, test_data_file, terms_file,
             for go_id in annots:
                 new_annots |= go_rels.get_anchestors(go_id)
             preds.append(new_annots)
-            
+
         # Filter classes
         preds = list(map(lambda x: set(filter(lambda y: y in go_set, x)), preds))
-    
-        fscore, prec, rec, s, ru, mi, fps, fns = evaluate_annotations(go_rels, labels, preds)
+
+        fscore, prec, rec, s, ru, mi, fps, fns = evaluate_annotations(
+            go_rels, labels, preds
+        )
         avg_fp = sum(map(lambda x: len(x), fps)) / len(fps)
-        avg_ic = sum(map(lambda x: sum(map(lambda go_id: go_rels.get_ic(go_id), x)), fps)) / len(fps)
-        #print(f'{avg_fp} {avg_ic}')
+        avg_ic = sum(
+            map(lambda x: sum(map(lambda go_id: go_rels.get_ic(go_id), x)), fps)
+        ) / len(fps)
+        # print(f'{avg_fp} {avg_ic}')
         precisions.append(prec)
         recalls.append(rec)
         # print(f'Fscore: {fscore}, Precision: {prec}, Recall: {rec} S: {s}, RU: {ru}, MI: {mi} threshold: {threshold}')
@@ -198,29 +202,35 @@ def main(train_data_file, test_data_file, terms_file,
             tmax = threshold
         if smin > s:
             smin = s
-    print(f'threshold: {tmax}')
-    print(f'Smin: {smin:0.3f}')
-    print(f'Fmax: {fmax:0.3f}')
+    print(f"threshold: {tmax}")
+    print(f"Smin: {smin:0.3f}")
+    print(f"Fmax: {fmax:0.3f}")
     precisions = np.array(precisions)
     recalls = np.array(recalls)
     sorted_index = np.argsort(recalls)
     recalls = recalls[sorted_index]
     precisions = precisions[sorted_index]
     aupr = np.trapz(precisions, recalls)
-    print(f'AUPR: {aupr:0.3f}')
+    print(f"AUPR: {aupr:0.3f}")
     plt.figure()
     lw = 2
-    plt.plot(recalls, precisions, color='darkorange',
-             lw=lw, label=f'AUPR curve (area = {aupr:0.2f})')
+    plt.plot(
+        recalls,
+        precisions,
+        color="darkorange",
+        lw=lw,
+        label=f"AUPR curve (area = {aupr:0.2f})",
+    )
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.xlabel('Recall')
-    plt.ylabel('Precision')
-    plt.title('Area Under the Precision-Recall curve')
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
+    plt.title("Area Under the Precision-Recall curve")
     plt.legend(loc="lower right")
-    plt.savefig(f'results/aupr_{ont}_{alpha:0.2f}.pdf')
-    df = pd.DataFrame({'precisions': precisions, 'recalls': recalls})
-    df.to_pickle(f'results/PR_{ont}_{alpha:0.2f}.pkl')
+    plt.savefig(f"results/aupr_{ont}_{alpha:0.2f}.pdf")
+    df = pd.DataFrame({"precisions": precisions, "recalls": recalls})
+    df.to_pickle(f"results/PR_{ont}_{alpha:0.2f}.pkl")
+
 
 def compute_roc(labels, preds):
     # Compute ROC curve and ROC area for each class
@@ -228,16 +238,18 @@ def compute_roc(labels, preds):
     roc_auc = auc(fpr, tpr)
     return roc_auc
 
+
 def compute_mcc(labels, preds):
     # Compute ROC curve and ROC area for each class
     mcc = matthews_corrcoef(labels.flatten(), preds.flatten())
     return mcc
 
+
 def evaluate_annotations(go, real_annots, pred_annots):
     total = 0
     p = 0.0
     r = 0.0
-    p_total= 0
+    p_total = 0
     ru = 0.0
     mi = 0.0
     fps = []
@@ -276,5 +288,5 @@ def evaluate_annotations(go, real_annots, pred_annots):
     return f, p, r, s, ru, mi, fps, fns
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
