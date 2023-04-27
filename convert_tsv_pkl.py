@@ -8,7 +8,13 @@ new_dict = {}
 f = open(os.path.join("/deepgoplus", "data", "predictions.pkl"), "rb")
 predictions = pickle.load(f)
 
-f = open("results.tsv")
+f = open(
+    os.path.join(
+        "/deepgoplus",
+        "results",
+        f"results_{os.environ.get('SLURM_ARRAY_TASK_ID', '')}.tsv",
+    )
+)
 f = csv.reader(f)
 for line in f:
     line = line[0].split("\t")
@@ -29,4 +35,10 @@ df = pd.DataFrame(
         "preds": [list(new_dict[x].values()) for x in new_dict],
     }
 )
-df.to_pickle("results.pkl")
+df.to_pickle(
+    os.path.join(
+        "/deepgoplus",
+        "results",
+        f"results_{os.environ.get('SLURM_ARRAY_TASK_ID', '')}.pkl",
+    )
+)
