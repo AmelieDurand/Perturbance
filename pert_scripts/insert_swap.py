@@ -112,8 +112,9 @@ def getPerturbation(type):
     help="Characters to use when perturbing data (useless or main)",
 )
 @ck.option("--spread", "-sp", is_flag=True, help="Perturbation in % to be applied")
+@ck.option("--alpha", "-a", help="Id of the perturbation")
 @ck.option("--seed", "-s", help="Seed for random")
-def main(perturbation: float, type: str, char_type: str, spread: bool, seed):
+def main(perturbation: float, type: str, char_type: str, spread: bool, alpha, seed):
     with open(os.path.join("/deepgoplus", "data", "test_data.fa"), "r") as f:
         database = f.readlines()
     if seed is not None:
@@ -123,7 +124,7 @@ def main(perturbation: float, type: str, char_type: str, spread: bool, seed):
         os.path.join(
             "/deepgoplus",
             "perturb",
-            f"test_data_{type}_{str(perturbation)+dna_char[char_type][0] + spread_text}.fa",
+            f"test_data_{type}_{str(perturbation)+dna_char[char_type][0]}_{str(alpha)}{spread_text}.fa",
         ),
         "w",
     )
@@ -140,7 +141,7 @@ def main(perturbation: float, type: str, char_type: str, spread: bool, seed):
             )
     f_out.close()
     print(
-        f"test_data_{type}_{str(perturbation)+dna_char[char_type][0]+ spread_text}.fa"
+        f"test_data_{type}_{str(perturbation)+dna_char[char_type][0]}_{str(alpha)}{spread_text}.fa"
     )
 
 

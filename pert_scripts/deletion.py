@@ -20,17 +20,32 @@ def delete(sample, p):
     default=0.01,
     help="Perturbation chance to be applied ranging from 0 to 1",
 )
+@ck.option("--alpha", "-a", help="Id of the perturbation")
 @ck.option("--seed", "-s", help="Seed for random")
-def main(perturbation, seed):
+def main(perturbation, alpha, seed):
     with open(os.path.join("/deepgoplus", "data", "test_data.fa"), "r") as f:
         database = [line.strip() for line in f.readlines()]
     if seed is not None:
         random.seed(seed)
-    f_out = open(f"perturb/test_data_delete_{str(perturbation)}.fa", "w")
+    f_out = open(
+        os.path.join(
+            "/deepgoplus",
+            "perturb",
+            f"test_data_delete_{str(perturbation)}_{str(alpha)}.fa",
+        ),
+        "w",
+    )
     for i in range(0, len(database), 2):
         f_out.write(database[i] + "\n")
         f_out.write(delete(database[i + 1], perturbation) + "\n")
     f_out.close()
+    print(
+        os.path.join(
+            "/deepgoplus",
+            "perturb",
+            f"test_data_delete_{str(perturbation)}_{str(alpha)}.fa",
+        )
+    )
 
 
 if __name__ == "__main__":

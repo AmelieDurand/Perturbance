@@ -25,7 +25,7 @@ def format_result(results: str, filename: str, iteration: int, pert: float):
     """
     metrics = results.stdout.decode("utf-8").split("\n")[-4:-1]
     with open(
-        os.path.join("/deepgoplus", "results", filename), "a+", newline=""
+        os.path.join("/deepgoplus", "metrics", filename), "a+", newline=""
     ) as csv_writer:
         writer = csv.writer(csv_writer)
         # Write the header if the file is empty
@@ -115,6 +115,8 @@ def main(type: str, char_type: str):
                         del_script_path,
                         "-p",
                         str(pert_chance),
+                        "-a",
+                        str(index),
                         "-s",
                         str(seed),
                     ],
@@ -129,6 +131,8 @@ def main(type: str, char_type: str):
                         str(pert_chance),
                         "-t",
                         type,
+                        "-a",
+                        str(index),
                         "-s",
                         str(seed),
                     ],
@@ -145,6 +149,8 @@ def main(type: str, char_type: str):
                         type,
                         "-c",
                         char_type,
+                        "-a",
+                        str(index),
                         "-s",
                         str(seed),
                     ],
@@ -162,6 +168,8 @@ def main(type: str, char_type: str):
                         "-sp",
                         "-c",
                         char_type,
+                        "-a",
+                        str(index),
                         "-s",
                         str(seed),
                     ],
@@ -178,6 +186,8 @@ def main(type: str, char_type: str):
                         type,
                         "-c",
                         char_type,
+                        "-a",
+                        str(index),
                         "-s",
                         str(seed),
                     ],
@@ -196,6 +206,8 @@ def main(type: str, char_type: str):
                         "-c",
                         char_type,
                         "-sp",
+                        "-a",
+                        str(index),
                         "-s",
                         str(seed),
                     ],
@@ -207,7 +219,7 @@ def main(type: str, char_type: str):
                 "/deepgoplus", "perturb", filename.stdout.decode().strip()
             )
             # Run DeepGoPlus
-            subprocess.run(
+            out = subprocess.run(
                 [
                     "python",
                     deepgoplus_script_path,
@@ -225,10 +237,6 @@ def main(type: str, char_type: str):
             subprocess.run(["python", pkl_script_path])
             print("Converted to pickle")
 
-            # Creates a results folder if it doesn't exist
-            if not os.path.exists("results"):
-                os.makedirs("results")
-
             # Evaluate results
             ontologies = ["mf", "bp", "cc"]
             for ontology in ontologies:
@@ -239,7 +247,11 @@ def main(type: str, char_type: str):
                         "-o",
                         ontology,
                         "-tsdf",
-                        "results.pkl",
+                        os.path.join(
+                            "/deepgoplus",
+                            "results",
+                            f"results_{os.environ.get('SLURM_ARRAY_TASK_ID', '')}.pkl",
+                        ),
                     ],
                     stdout=subprocess.PIPE,
                 )
@@ -248,7 +260,6 @@ def main(type: str, char_type: str):
                     "insert",
                     "insert-spread",
                     "substitution",
-                    "substitution-spread",
                 ]:
                     format_result(
                         results,
