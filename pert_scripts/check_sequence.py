@@ -4,23 +4,26 @@ import pandas as pd
 import os
 from Bio import SeqIO
 import gzip
+
 """
 label_dic = {}
 with gzip.open("pert_scripts\\uniprot.gz",'rt') as seq_bank:
     for record in SeqIO.parse(seq_bank, "fasta"):
         label = record.id #Try split with "|"
         label = label.split('|')[-1]
+        label = label.split('_')[0]
         label_dic[record.seq] = label
+
 with open('pert_scripts\\uniprot_canon.pkl', 'wb') as f:
     pickle.dump(label_dic, f)
 """
-with open(os.path.join("pert_scripts", "uniprot_canon.pkl"), "rb") as f:
+with open(os.path.join("pert_scripts", "uniprot_canon_fixed.pkl"), "rb") as f:
     uniprot_dict = pickle.load(f)
 
-#print(random.sample(uniprot_dict.items(), k=4)) <--- Check formatting
+print(random.sample(uniprot_dict.items(), k=4)) #<--- Check formatting
 
 assert "DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEGQKVEFSIENGAK" in uniprot_dict.keys()
-assert uniprot_dict["DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEGQKVEFSIENGAK"] == "CSPA_YEREN"
+assert uniprot_dict["DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEGQKVEFSIENGAK"] == "CSPA"
 
 
 def is_label_same(seq_pert, label_pert):
@@ -30,6 +33,7 @@ def is_label_same(seq_pert, label_pert):
     Alert if given seequence, the id changes
     """
     label_pert = label_pert[1:]  # get rid of ">"
+    label_pert = label_pert.split('_')[0]
     if seq_pert in uniprot_dict.keys():
         if uniprot_dict[seq_pert] != label_pert:  # <-- check if \n at the end disrupts
             return True, False 
@@ -66,7 +70,8 @@ def main():
                 seq_unfound = [] 
                 seq_label_change = []
 
-                for i in range(0, len(test_file) - 1, 2):
+                #for i in range(0, len(test_file) - 1, 2):
+                for i in [6627,6628]:
                 #for i in [14, 46, 86, 126, 180, 190, 212, 266]:
                     be_there, match = is_label_same(test_file[i + 1].strip(), test_file[i].strip())
                     if be_there and not match:
@@ -89,6 +94,16 @@ def main():
         "label in uniprot": dict_return, 
         })
     print(df)
+    #TRAIN THE DICT
+    """
+    with open('pert_scripts\\uniprot_canon_fixed.pkl', 'wb') as f:
+        fixed_dic = uniprot_dict
+        for i in seq_label_change:
+            label_temp = test_file[i].strip()[1:]
+            fixed_dic[test_file[i + 1].strip()] = label_temp.split('_')[0]
+        pickle.dump(fixed_dic, f)
+        assert 'PAU21' in fixed_dic.values()
+    """
 if __name__ == '__main__':
     main()
 
@@ -122,9 +137,4 @@ with gzip.open("pert_scripts\\uniprot.gz",'rt') as seq_bank:
         label_dic[record.seq] = record.id
 with open('pert_scripts\\uniprot_canon.pkl', 'wb') as f:
     pickle.dump(label_dic, f)
-
-3-- To test script is running well, paste this at the top of test .fa file
->CSPA_YERENFAKE
-DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEGQKVEFSIENGAK
-    When run, this script should return index a list containing 0
 """
