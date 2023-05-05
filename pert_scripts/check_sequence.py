@@ -5,7 +5,9 @@ import os
 from Bio import SeqIO
 import gzip
 
-"""
+#issue: RS23B not accepted for RS23A
+
+""" <--- UNCOMMENT IF RUNNING FIRST TIME
 label_dic = {}
 with gzip.open("pert_scripts\\uniprot.gz",'rt') as seq_bank:
     for record in SeqIO.parse(seq_bank, "fasta"):
@@ -13,10 +15,20 @@ with gzip.open("pert_scripts\\uniprot.gz",'rt') as seq_bank:
         label = label.split('|')[-1]
         label = label.split('_')[0]
         label_dic[record.seq] = label
+    # Overwrite labels from test file    
+    with open("data\\test_data.fa") as f:
+        fa_file = f.readlines()
+        for i in range(0, len(fa_file) - 1, 2):
+            label_temp = fa_file[i][1:].strip()
+            label = label.split('_')[0]
+            seq_temp = fa_file[i+1].strip()
+            label_dic[seq_temp] = label_temp
 
-with open('pert_scripts\\uniprot_canon.pkl', 'wb') as f:
-    pickle.dump(label_dic, f)
-"""
+    with open('pert_scripts\\uniprot_canon_fixed.pkl', 'wb') as f:
+        pickle.dump(label_dic, f)
+"""   
+
+
 with open(os.path.join("pert_scripts", "uniprot_canon_fixed.pkl"), "rb") as f:
     uniprot_dict = pickle.load(f)
 
@@ -58,52 +70,35 @@ def val_to_key(thing_to_search):
 def main():
     # ---- RUNNING, iterate over all
     print(len(uniprot_dict.keys()))
-    for filename in os.listdir("perturb"):
-        f = os.path.join("perturb", filename)
-        # checking if it is a file
-        if os.path.isfile(f) and filename.startswith(
-            "test.fa"
-        ):  # specify what file
-            with open(f) as f_pert:
-                test_file = f_pert.readlines()
-                
-                seq_unfound = [] 
-                seq_label_change = []
+    # for filename in os.listdir("perturb"):
+    #     print(filename)
+    #     f = os.path.join("perturb\\insert-spread-main", filename)
+    #     # checking if it is a file
+    #     if os.path.isfile(f) and filename.startswith(
+    #         "test_"
+    #     ):  # specify what file
+    with open(f"perturb\\insert-spread-main\\test_data_insert_0.8A_9_spread.fa") as f_pert:
+        test_file = f_pert.readlines()
+        
+        seq_unfound = [] 
+        seq_label_change = []
 
-                #for i in range(0, len(test_file) - 1, 2):
-                for i in [6627,6628]:
-                #for i in [14, 46, 86, 126, 180, 190, 212, 266]:
-                    be_there, match = is_label_same(test_file[i + 1].strip(), test_file[i].strip())
-                    if be_there and not match:
-                        seq_label_change.append(i)
-                    elif not be_there:
-                        seq_unfound.append(i)              
-            # print(seq_label_change)
-            # print([test_file[i].strip() for i in seq_label_change])
-            dict_return = []
-            for i in seq_label_change:
-                seq = test_file[i + 1].strip()
-                dict_return.append(uniprot_dict[seq])
-            # print(dict_return)
-            # print(seq_label_change)
-            print(f'#sequence where label changed: {len(seq_label_change)}')
-            print(f'#sequence not found: {len(seq_unfound)}')
+        for i in range(1, len(test_file) - 1, 2): #!! EMPTY LINE at beginning
+            be_there, match = is_label_same(test_file[i + 1].strip(), test_file[i].strip())
+            if be_there and not match:
+                seq_label_change.append(i)
+            elif not be_there:
+                seq_unfound.append(i)              
+    
+    print(f'#sequence where label changed (/3875): {len(seq_label_change)}')
+    print(f'#sequence not found (/3875): {len(seq_unfound)}')
     df = pd.DataFrame({
-        "label changes (index)": seq_label_change,
-        "label in test file": [test_file[i].strip()[1:] for i in seq_label_change],
-        "label in uniprot": dict_return, 
-        })
+    "label changes (index)": seq_label_change,
+    "label in test file": [test_file[i].strip()[1:] for i in seq_label_change],
+    "label in uniprot": [uniprot_dict[test_file[i+1].strip()] for i in seq_label_change], 
+    })
     print(df)
-    #TRAIN THE DICT
-    """
-    with open('pert_scripts\\uniprot_canon_fixed.pkl', 'wb') as f:
-        fixed_dic = uniprot_dict
-        for i in seq_label_change:
-            label_temp = test_file[i].strip()[1:]
-            fixed_dic[test_file[i + 1].strip()] = label_temp.split('_')[0]
-        pickle.dump(fixed_dic, f)
-        assert 'PAU21' in fixed_dic.values()
-    """
+
 if __name__ == '__main__':
     main()
 
@@ -111,7 +106,6 @@ if __name__ == '__main__':
 Uniprot syntax:
 Seq('MYAIIETGGKQIKVEAGQEIYVEKLAGEVGDVVTFDKVLFVGGDSAKVGVPFVD...INA')
 sp|XXXX|...
-^ start from 10
 
 deepgoplus Sequence:
 label starts with ">"
