@@ -70,34 +70,32 @@ def val_to_key(thing_to_search):
 def main():
     # ---- RUNNING, iterate over all
     print(len(uniprot_dict.keys()))
-    # for filename in os.listdir("perturb"):
-    #     print(filename)
-    #     f = os.path.join("perturb\\insert-spread-main", filename)
-    #     # checking if it is a file
-    #     if os.path.isfile(f) and filename.startswith(
-    #         "test_"
-    #     ):  # specify what file
-    with open(f"perturb\\insert-spread-main\\test_data_insert_0.8A_9_spread.fa") as f_pert:
-        test_file = f_pert.readlines()
-        
-        seq_unfound = [] 
-        seq_label_change = []
+    perturb_file_master = []
+    for root, dirs, files in os.walk("perturb", topdown=False):
+        for name in files:
+            perturb_file_master.append(os.path.join(root, name))
+    for f in perturb_file_master:
+        with open(f) as f_pert:
+            test_file = f_pert.readlines()
+            
+            seq_unfound = [] 
+            seq_label_change = []
 
-        for i in range(1, len(test_file) - 1, 2): #!! EMPTY LINE at beginning
-            be_there, match = is_label_same(test_file[i + 1].strip(), test_file[i].strip())
-            if be_there and not match:
-                seq_label_change.append(i)
-            elif not be_there:
-                seq_unfound.append(i)              
-    
-    print(f'#sequence where label changed (/3875): {len(seq_label_change)}')
-    print(f'#sequence not found (/3875): {len(seq_unfound)}')
-    df = pd.DataFrame({
-    "label changes (index)": seq_label_change,
-    "label in test file": [test_file[i].strip()[1:] for i in seq_label_change],
-    "label in uniprot": [uniprot_dict[test_file[i+1].strip()] for i in seq_label_change], 
-    })
-    print(df)
+            for i in range(1, len(test_file) - 1, 2): #!! EMPTY LINE at beginning
+                be_there, match = is_label_same(test_file[i + 1].strip(), test_file[i].strip())
+                if be_there and not match:
+                    seq_label_change.append(i)
+                elif not be_there:
+                    seq_unfound.append(i)              
+        
+        print(f'#sequence where label changed (/3875): {len(seq_label_change)}')
+        print(f'#sequence not found (/3875): {len(seq_unfound)}')
+        df = pd.DataFrame({
+        "label changes (index)": seq_label_change,
+        "label in test file": [test_file[i].strip()[1:] for i in seq_label_change],
+        "label in uniprot": [uniprot_dict[test_file[i+1].strip()] for i in seq_label_change], 
+        })
+        if not df.empty: print(df)
 
 if __name__ == '__main__':
     main()
