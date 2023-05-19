@@ -79,8 +79,7 @@ class CLICommand(ck.Command):
             "delete",
             "insert",
             "insert-spread",
-            "substitution",
-            "substitution-spread",
+            "substitution"
         ]
     ),
     help="Type of perturbation to apply",
