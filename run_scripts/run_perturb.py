@@ -255,7 +255,6 @@ def main(type: str, char_type: str):
                     ],
                     stdout=subprocess.PIPE,
                 )
-                # TODO make into Dict
                 if type in [
                     "insert",
                     "insert-spread",
