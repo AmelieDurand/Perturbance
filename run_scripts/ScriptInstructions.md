@@ -14,7 +14,7 @@
 # Scripts
 
 ## Perturbation Scripts
-All perturbation scripts have an optional ```-s``` CLI option for seeding the random
+All perturbation scripts have an optional ```-s``` CLI option for seeding
 ### Insert With Spread
 ```bash
 python <path to insert_swap.py> -p <Perturbation Chance> -sp
@@ -24,7 +24,9 @@ python <path to insert_swap.py> -p <Perturbation Chance> -sp
 python <path to insert_swap.py> -p <Perturbation Chance>
 ```
 ### Swap
-TODO
+```bash
+python <path to insert_swap.py> -t swap -p <Perturbation Chance>
+```
 ### Delete
 ```bash
 python <path to deletion.py> -p <Perturbation Chance>
