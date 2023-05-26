@@ -11,8 +11,8 @@ import gzip
 label_dic = {}
 with gzip.open("pert_scripts\\uniprot.gz",'rt') as seq_bank:
     for record in SeqIO.parse(seq_bank, "fasta"):
-        label = record.id #Try split with "|"
-        label = label.split('|')[-1]
+        label = record.id 
+        label = label.split('|')[-1] #Try split with "|"
         label = label.split('_')[0]
         label_dic[record.seq] = label
     # Overwrite labels from test file    
@@ -31,8 +31,9 @@ with gzip.open("pert_scripts\\uniprot.gz",'rt') as seq_bank:
 
 with open(os.path.join("pert_scripts", "uniprot_canon_fixed.pkl"), "rb") as f:
     uniprot_dict = pickle.load(f)
+    print(f"Dictionary successfully loaded")
 
-print(random.sample(uniprot_dict.items(), k=4)) #<--- Check formatting
+#print(random.sample(uniprot_dict.items(), k=4)) #<--- Check formatting
 
 assert "DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEGQKVEFSIENGAK" in uniprot_dict.keys()
 assert uniprot_dict["DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEGQKVEFSIENGAK"] == "CSPA"
@@ -53,19 +54,6 @@ def is_label_same(seq_pert, label_pert):
             return True, True
     return False, False
 
-def val_to_key(thing_to_search):
-    """_summary_
-
-    Args:
-        thing_to_search (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    thing_to_search = thing_to_search.strip()
-    keys = [k for k, v in uniprot_dict.items() if v==thing_to_search]
-    print(keys)
-    return keys
 
 def main():
     # ---- RUNNING, iterate over all
@@ -76,26 +64,31 @@ def main():
             perturb_file_master.append(os.path.join(root, name))
     for f in perturb_file_master:
         with open(f) as f_pert:
+            print(f"Working on: {f}")
             test_file = f_pert.readlines()
             
             seq_unfound = [] 
             seq_label_change = []
 
             for i in range(1, len(test_file) - 1, 2): #!! EMPTY LINE at beginning
-                be_there, match = is_label_same(test_file[i + 1].strip(), test_file[i].strip())
+                be_there, match = is_label_same(
+                    label_pert = test_file[i].strip(),
+                    seq_pert = test_file[i+1].strip(), 
+                    )
                 if be_there and not match:
                     seq_label_change.append(i)
                 elif not be_there:
                     seq_unfound.append(i)              
-        
-        print(f'#sequence where label changed (/3875): {len(seq_label_change)}')
-        print(f'#sequence not found (/3875): {len(seq_unfound)}')
-        df = pd.DataFrame({
-        "label changes (index)": seq_label_change,
-        "label in test file": [test_file[i].strip()[1:] for i in seq_label_change],
-        "label in uniprot": [uniprot_dict[test_file[i+1].strip()] for i in seq_label_change], 
-        })
-        if not df.empty: print(df)
+            if seq_label_change != []:
+                print(seq_label_change)
+                print(f'#sequence where label changed (/3875): {len(seq_label_change)}')
+                print(f'#sequence not found (/3875): {len(seq_unfound)}')
+                df = pd.DataFrame({
+                "label changes (index)": seq_label_change,
+                "label in test file": [test_file[i].strip()[1:] for i in seq_label_change],
+                "label in uniprot": [uniprot_dict[test_file[i+1].strip()] for i in seq_label_change], 
+                })
+                print(df)
 
 if __name__ == '__main__':
     main()
@@ -114,6 +107,8 @@ print(random.sample(label_dict.keys(), k=20))
 print('DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEGQKVEFSIENGAK' in label_dict.keys()) #<-- True (obtained from sample)
 print('DKGFGFITPADGSKDVFVHFSAIQSNDFKTLDEG' in label_dict.keys()) #<-- False
 
+Current issue: incompatible
+uniprot say <protein identifier>_<species> is not stable/reliable/unique
 """
 
 
